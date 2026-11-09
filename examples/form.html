@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lead form example</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 420px; margin: 40px auto; padding: 0 16px; }
+    input, textarea, button { width: 100%; box-sizing: border-box; font: inherit; padding: 12px; margin: 6px 0; border: 1px solid #ccc; border-radius: 8px; }
+    button { background: #111; color: #fff; border: 0; cursor: pointer; }
+    .hp { position: absolute; left: -9999px; }
+  </style>
+</head>
+<body>
+  <h1>Get a free estimate</h1>
+  <form id="lead">
+    <input name="name" placeholder="Your name" required>
+    <input name="phone" type="tel" placeholder="Phone">
+    <input name="contact" placeholder="Email or Telegram @username">
+    <textarea name="message" rows="4" placeholder="Your task"></textarea>
+    <input name="promo" placeholder="Promo code (optional)">
+    <!-- honeypot: hidden from people, bots fill it -->
+    <input name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button>Send</button>
+    <p id="status" role="status"></p>
+  </form>
+  <script>
+    const ENDPOINT = 'http://localhost:3000/lead';
+    document.getElementById('lead').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('status');
+      status.textContent = 'Sending…';
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(new FormData(e.target))),
+        });
+        const data = await res.json();
+        status.textContent = data.ok ? 'Thank you! We will contact you soon.' : (data.errors || [data.error]).join(', ');
+        if (data.ok) e.target.reset();
+      } catch {
+        status.textContent = 'Network error, please try again.';
+      }
+    });
+  </script>
+</body>
+</html>
